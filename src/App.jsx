@@ -1,212 +1,229 @@
 import { useState } from "react";
-import axios from "axios";
+import { Search, MapPin, Building2, Mail, Moon, Sun } from "lucide-react";
 
-function App() {
+const ModernPostalLookup = () => {
+  const [darkMode, setDarkMode] = useState(false);
   const [zip, setZip] = useState("");
   const [area, setArea] = useState("");
   const [zipPostOffices, setZipPostOffices] = useState([]);
   const [areaPostOffices, setAreaPostOffices] = useState([]);
   const [zipError, setZipError] = useState("");
   const [areaError, setAreaError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeSearch, setActiveSearch] = useState("zip"); // Track active search type
+  const [country, setCountry] = useState(""); // Country selection state
 
-  const handleZip = (e) => {
-    setZip(e.target.value);
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
   };
 
-  const handleArea = (e) => {
-    setArea(e.target.value);
-  };
-
-  const handleSearchZip = async () => {
+  const handleSearch = async (type) => {
+    setIsLoading(true);
     try {
-      const response = await axios.get(
-        `https://api.postalpincode.in/pincode/${zip}`
+      const query = type === "zip" ? zip : area;
+      const endpoint = type === "zip" ? "pincode" : "postoffice";
+      const response = await fetch(
+        `https://api.postalpincode.in/${endpoint}/${query}`
       );
-      let blocks = response.data[0].PostOffice;
-      if (blocks) {
-        setZipPostOffices(blocks);
-        setZipError(""); // Clear error if data is found
+      const data = await response.json();
+      const offices = data[0]?.PostOffice;
+
+      if (offices) {
+        if (type === "zip") {
+          setZipPostOffices(offices);
+          setZipError("");
+        } else {
+          setAreaPostOffices(offices);
+          setAreaError("");
+        }
       } else {
-        setZipPostOffices([]);
-        setZipError("Pincode does not exist.");
+        if (type === "zip") {
+          setZipPostOffices([]);
+          setZipError("No results found");
+        } else {
+          setAreaPostOffices([]);
+          setAreaError("No results found");
+        }
       }
     } catch (error) {
-      setZipPostOffices([]);
-      setZipError("Pincode does not exist.");
+      if (type === "zip") {
+        setZipError("An error occurred");
+      } else {
+        setAreaError("An error occurred");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSearchArea = async () => {
-    try {
-      const response = await axios.get(
-        `https://api.postalpincode.in/postoffice/${area}`
-      );
-      let blocks = response.data[0].PostOffice;
-      if (blocks) {
-        setAreaPostOffices(blocks);
-        setAreaError(""); // Clear error if data is found
-      } else {
-        setAreaPostOffices([]);
-        setAreaError("Area does not exist.");
-      }
-    } catch (error) {
-      setAreaPostOffices([]);
-      setAreaError("Area does not exist.");
-    }
+  const categories = [
+    { icon: <MapPin className="w-4 h-4" />, label: "PIN Search", type: "zip" },
+    // { icon: <Mail className="w-4 h-4" />, label: "Select Country" },
+    { icon: <Building2 className="w-4 h-4" />, label: "Area Search", type: "area" },
+  ];
+
+  const handleCategoryClick = (type) => {
+    setActiveSearch(type);
+    setZipPostOffices([]); // Clear results when changing search type
+    setAreaPostOffices([]);
   };
 
   return (
-    <>
-      <div className=" min-h-screen lg:h-screen p-10 ">
-        <div className="mb-28 lg:mb-8">
-          {" "}
-          <h1 className="text-center mb-2 text-6xl font-extrabold text-blue-400">
-            FINDPIN
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-slate-100'}`}>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Header */}
+        <nav className="flex justify-between items-center mb-16">
+          <div className="flex items-center space-x-2">
+            <Mail className="w-6 h-6 text-blue-600" />
+            <span className="text-xl text-black font-bold dark:text-white">FindPin  <span className="text-xs align-super text-blue-200 font-medium ">by nouvous</span> </span>
+          </div>
+          <div className="flex items-center space-x-6">
+            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+              {darkMode ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">
+              Get Started
+            </button>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <div className="text-center mb-16 relative">
+          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 inline-block text-transparent bg-clip-text">
+            Discover Postal / Zip Codes
           </h1>
-          <p className="text-center mb-11 text-blue-800 italic font-medium">
-            Find pincode & area easily.
+          <p className="text-gray-600 dark:text-gray-300 text-xl mb-8 max-w-2xl mx-auto">
+            A modern platform for finding postal codes and area information,
+            updated regularly for the community.
           </p>
         </div>
 
-        <div className="flex flex-col  lg:flex-row justify-evenly items-center lg:items-start">
-          <div>
-            <div className="text-center mb-5">
-              <h1 className="mb-5 text-2xl text-blue-500 font-bold">
-                ENTER PIN CODE
-              </h1>
+        {/* Category Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-12">
+          {categories.map((category, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-xl ${activeSearch === category.type ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-800'} shadow-sm hover:shadow-md transition-all cursor-pointer`}
+              onClick={() => category.type && handleCategoryClick(category.type)}
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 dark:text-white">
+                  {category.icon}
+                </div>
+                <span className="font-medium">{category.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Country Select */}
+        <div className="mb-6">
+          <label className="block text-lg font-semibold mb-2 dark:text-white">Select Country</label>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+          >
+            <option value="">Choose a country...</option>
+            <option value="US">United States</option>
+            <option value="CA">Canada</option>
+            <option value="IN">India</option>
+            {/* Add more countries as needed */}
+          </select>
+        </div>
+
+        {/* Search Section */}
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* PIN Code Search */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-1 dark:text-white">Search by PIN Code</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Find areas by PIN code</p>
+            </div>
+            <div className="relative">
               <input
                 type="number"
                 value={zip}
-                onChange={handleZip}
-                className="px-2 py-2 rounded border"
+                onChange={(e) => setZip(e.target.value)}
+                placeholder="Enter PIN code..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                disabled={activeSearch !== "zip"} // Disable when not active
               />
               <button
-                onClick={handleSearchZip}
-                className="bg-blue-500 border text-white ml-2 px-3 py-2 rounded-md font-semibold"
+                onClick={() => handleSearch('zip')}
+                disabled={isLoading || activeSearch !== "zip"} // Disable when not active
+                className="absolute right-2 top-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                Search
+                <Search className="w-4 h-4" />
               </button>
             </div>
             {zipError && (
-              <div className="bg-red-500 text-white p-2 rounded mb-3">
+              <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-xl">
                 {zipError}
               </div>
             )}
-            {zipPostOffices.length > 0 && (
-              <div className="bg-blue-50  p-5 rounded shadow-md w-full max-w-md">
-                <h2 className="text-xl font-bold mb-3">
-                  Area of Pin Code:{" "}
-                  <span className="bg-blue-200 px-2">{zip}</span>
-                </h2>
-                <ul className="max-h-[30rem] overflow-auto">
-                  {zipPostOffices.map((office, index) => (
-                    <li key={index} className="border-b py-2">
-                      <p>
-                        <strong>Name:</strong> {office.Name}
-                      </p>
-                      <p>
-                        <strong>Branch Type:</strong> {office.BranchType}
-                      </p>
-                      <p>
-                        <strong>Delivery Status:</strong>{" "}
-                        {office.DeliveryStatus}
-                      </p>
-                      <p>
-                        <strong>District:</strong>{" "}
-                        <span className="bg-blue-200 px-1">
-                          {office.District}
-                        </span>
-                      </p>
-                      <p>
-                        <strong>State:</strong> {office.State}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
-          <div className="h-[1px] relative w-[90vw] my-16 lg:h-[70vh] lg:mt-14 lg:w-[1px] bg-slate-300">
-            <div className="bg-blue-50 text-blue-300 p-4 rounded-full absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-              OR
+
+          {/* Area Search */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-1 dark:text-white">Search by Area</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Find PIN codes by area name</p>
             </div>
-          </div>
-          <div>
-            <div className="text-center mb-5">
-              <h1 className="mb-5 text-2xl font-bold text-blue-500">
-                ENTER AREA NAME
-              </h1>
+            <div className="relative">
               <input
                 type="text"
                 value={area}
-                onChange={handleArea}
-                className="px-2 py-2 rounded border"
+                onChange={(e) => setArea(e.target.value)}
+                placeholder="Enter area name..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                disabled={activeSearch !== "area"} // Disable when not active
               />
               <button
-                onClick={handleSearchArea}
-                className="bg-blue-500 border text-white ml-2 px-3 py-2 rounded-md font-semibold"
+                onClick={() => handleSearch('area')}
+                disabled={isLoading || activeSearch !== "area"} // Disable when not active
+                className="absolute right-2 top-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                Search
+                <Search className="w-4 h-4" />
               </button>
             </div>
             {areaError && (
-              <div className="bg-red-500 text-white p-2 rounded mb-3">
+              <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-xl">
                 {areaError}
-              </div>
-            )}
-            {areaPostOffices.length > 0 && (
-              <div className="bg-blue-50 p-5 rounded  shadow-md w-full max-w-md">
-                <h2 className="text-xl font-bold mb-3">
-                  Pin Code of Area:{" "}
-                  <span className="bg-blue-200 px-2">{area}</span>
-                </h2>
-                <ul className="max-h-[30rem] overflow-auto">
-                  {areaPostOffices.map((office, index) => (
-                    <li key={index} className="border-b py-2">
-                      <p>
-                        <strong>Name:</strong> {office.Name}
-                      </p>
-                      <p>
-                        <strong>Branch Type:</strong> {office.BranchType}
-                      </p>
-                      <p>
-                        <strong>Delivery Status:</strong>{" "}
-                        {office.DeliveryStatus}
-                      </p>
-                      <p>
-                        <strong>PinCode:</strong>{" "}
-                        <span className="bg-blue-200 px-1">
-                          {office.Pincode}
-                        </span>
-                      </p>
-                      <p>
-                        <strong>State:</strong> {office.State}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
               </div>
             )}
           </div>
         </div>
-      </div>
-      <footer>
-        <div className="bg-blue-100 w-full">
-          <p className="text-center font-medium text-blue-600 p-5">
-            Made by{" "}
-            <a
-              href="https://www.nouvous.com"
-              target="_blank"
-              rel="noreferrer"
-              className="text-blue-600 font-bold"
-            >
-              Nouvous
-            </a>
-          </p>
-        </div>
-      </footer>
-    </>
-  );
-}
 
-export default App;
+        {/* Results Section */}
+        {activeSearch === "zip" && zipPostOffices.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-4 dark:text-white">Results for PIN Code:</h3>
+            <ul className="list-disc list-inside mb-6">
+              {zipPostOffices.map((office) => (
+                <li key={office.Name} className="dark:text-gray-300">
+                  {office.Name} - {office.District}, {office.State}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {activeSearch === "area" && areaPostOffices.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-4 dark:text-white">Results for Area:</h3>
+            <ul className="list-disc list-inside mb-6">
+              {areaPostOffices.map((office) => (
+                <li key={office.Name} className="dark:text-gray-300">
+                  {office.Name} - {office.District}, {office.State}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ModernPostalLookup;
