@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Search, MapPin, Building2, Mail, Moon, Sun } from "lucide-react";
+import { Search, MapPin, Building2, Mail, Moon, Sun, Pin } from "lucide-react";
 
 const ModernPostalLookup = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [zip, setZip] = useState("");
   const [area, setArea] = useState("");
   const [zipPostOffices, setZipPostOffices] = useState([]);
@@ -10,12 +10,8 @@ const ModernPostalLookup = () => {
   const [zipError, setZipError] = useState("");
   const [areaError, setAreaError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeSearch, setActiveSearch] = useState("zip"); // Track active search type
-  const [country, setCountry] = useState(""); // Country selection state
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+  const [activeSearch, setActiveSearch] = useState("zip");
+  const [country, setCountry] = useState("");
 
   const handleSearch = async (type) => {
     setIsLoading(true);
@@ -28,6 +24,7 @@ const ModernPostalLookup = () => {
       const data = await response.json();
       const offices = data[0]?.PostOffice;
 
+      console.log(offices)
       if (offices) {
         if (type === "zip") {
           setZipPostOffices(offices);
@@ -58,13 +55,12 @@ const ModernPostalLookup = () => {
 
   const categories = [
     { icon: <MapPin className="w-4 h-4" />, label: "PIN Search", type: "zip" },
-    // { icon: <Mail className="w-4 h-4" />, label: "Select Country" },
     { icon: <Building2 className="w-4 h-4" />, label: "Area Search", type: "area" },
   ];
 
   const handleCategoryClick = (type) => {
     setActiveSearch(type);
-    setZipPostOffices([]); // Clear results when changing search type
+    setZipPostOffices([]);
     setAreaPostOffices([]);
   };
 
@@ -74,13 +70,10 @@ const ModernPostalLookup = () => {
         {/* Header */}
         <nav className="flex justify-between items-center mb-16">
           <div className="flex items-center space-x-2">
-            <Mail className="w-6 h-6 text-blue-600" />
-            <span className="text-xl text-black font-bold dark:text-white">FindPin  <span className="text-xs align-super text-blue-200 font-medium ">by nouvous</span> </span>
+            <Pin className="w-6 h-6 text-blue-600" />
+            <span className="text-xl text-black font-bold dark:text-white">FindPin  <a href="https://nouvous.com" target="_blank"><span className="text-xs align-super text-blue-200 font-medium hover:underline underline-offset-2">by nouvous</span></a> </span>
           </div>
           <div className="flex items-center space-x-6">
-            <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-              {darkMode ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5" />}
-            </button>
             <button className="px-4 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700">
               Get Started
             </button>
@@ -103,8 +96,10 @@ const ModernPostalLookup = () => {
           {categories.map((category, index) => (
             <div
               key={index}
-              className={`p-4 rounded-xl ${activeSearch === category.type ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-800'} shadow-sm hover:shadow-md transition-all cursor-pointer`}
-              onClick={() => category.type && handleCategoryClick(category.type)}
+              className={`p-4 rounded-xl ${activeSearch === category.type ? 'bg-blue-500 text-white' : 'text-white bg-gray-800'} shadow-sm hover:shadow-md transition-all cursor-pointer`}
+              onClick={() => {
+                category.type && handleCategoryClick(category.type)
+              }}
             >
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 dark:text-white">
@@ -128,17 +123,16 @@ const ModernPostalLookup = () => {
             <option value="US">United States</option>
             <option value="CA">Canada</option>
             <option value="IN">India</option>
-            {/* Add more countries as needed */}
           </select>
         </div>
 
         {/* Search Section */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           {/* PIN Code Search */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg">
+          <div className={`bg-white/80 bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg transition-all duration-300 ${activeSearch === "zip" ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
             <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-1 dark:text-white">Search by PIN Code</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Find areas by PIN code</p>
+              <h2 className="text-xl font-semibold mb-1 text-white">Search by PIN Code</h2>
+              <p className="text-gray-500 text-gray-400 text-sm">Find areas by PIN code</p>
             </div>
             <div className="relative">
               <input
@@ -147,11 +141,10 @@ const ModernPostalLookup = () => {
                 onChange={(e) => setZip(e.target.value)}
                 placeholder="Enter PIN code..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                disabled={activeSearch !== "zip"} // Disable when not active
               />
               <button
                 onClick={() => handleSearch('zip')}
-                disabled={isLoading || activeSearch !== "zip"} // Disable when not active
+                disabled={isLoading}
                 className="absolute right-2 top-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <Search className="w-4 h-4" />
@@ -165,7 +158,7 @@ const ModernPostalLookup = () => {
           </div>
 
           {/* Area Search */}
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg">
+          <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg transition-all duration-300 ${activeSearch === "area" ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
             <div className="mb-4">
               <h2 className="text-xl font-semibold mb-1 dark:text-white">Search by Area</h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm">Find PIN codes by area name</p>
@@ -177,11 +170,10 @@ const ModernPostalLookup = () => {
                 onChange={(e) => setArea(e.target.value)}
                 placeholder="Enter area name..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                disabled={activeSearch !== "area"} // Disable when not active
               />
               <button
                 onClick={() => handleSearch('area')}
-                disabled={isLoading || activeSearch !== "area"} // Disable when not active
+                disabled={isLoading}
                 className="absolute right-2 top-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <Search className="w-4 h-4" />
@@ -196,31 +188,41 @@ const ModernPostalLookup = () => {
         </div>
 
         {/* Results Section */}
-        {activeSearch === "zip" && zipPostOffices.length > 0 && (
-          <div>
-            <h3 className="text-xl font-semibold mb-4 dark:text-white">Results for PIN Code:</h3>
-            <ul className="list-disc list-inside mb-6">
-              {zipPostOffices.map((office) => (
-                <li key={office.Name} className="dark:text-gray-300">
-                  {office.Name} - {office.District}, {office.State}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div>
+          {activeSearch === "zip" && zipPostOffices.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 dark:text-white">Post Offices Found:</h2>
+              <ul className="space-y-2">
+                {zipPostOffices.map((office,i) => (
+                  <li key={i} className="bg-gray-100 text-white dark:bg-gray-700 p-3 rounded-lg">
+                    <div>Pin Code of Area: {office.Name}</div> 
+                    <div>Branch Type: {office.BranchType}</div>
+                    <div>Delivery Status: {office.DeliveryStatus}</div>
+                    <div>PinCode: {office.Pincode}</div>
+                    <div>State: {office.State}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-        {activeSearch === "area" && areaPostOffices.length > 0 && (
-          <div>
-            <h3 className="text-xl font-semibold mb-4 dark:text-white">Results for Area:</h3>
-            <ul className="list-disc list-inside mb-6">
-              {areaPostOffices.map((office) => (
-                <li key={office.Name} className="dark:text-gray-300">
-                  {office.Name} - {office.District}, {office.State}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          {activeSearch === "area" && areaPostOffices.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 dark:text-white">Post Offices Found:</h2>
+              <ul className="space-y-2">
+                {areaPostOffices.map((office,i) => (
+                  <li key={i} className="bg-gray-100 text-white dark:bg-gray-700 p-3 rounded-lg">
+                    <div>Pin Code of Area: {office.Name}</div> 
+                    <div>Branch Type: {office.BranchType}</div>
+                    <div>Delivery Status: {office.DeliveryStatus}</div>
+                    <div>PinCode: {office.Pincode}</div>
+                    <div>State: {office.State}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
