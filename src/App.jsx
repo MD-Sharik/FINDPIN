@@ -27,7 +27,7 @@ const SearchInput = memo(({ type, activeSearch, value, onChange, onSearch, place
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+        className="w-full px-4 py-3 rounded-xl border  border-gray-700 bg-gray-900 text-white focus:ring-2 focus:ring-blue-500 outline-none"
       />
       <button
         onClick={onSearch}
@@ -102,11 +102,11 @@ const ModernPostalLookup = () => {
     <div className="min-h-screen bg-gray-900">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
-        <nav className="flex justify-between items-center mb-16">
+        <nav className="flex justify-between items-center mb-32">
           <div className="flex items-center space-x-2">
             <Pin className="w-6 h-6 text-blue-600" />
-            <span className="text-xl text-black font-bold dark:text-white">
-              FindPin
+            <span className="text-xl font-bold text-white">
+              FindPin {" "}
               <a href="https://nouvous.com" target="_blank">
                 <span className="text-xs align-super text-blue-200 font-medium hover:underline underline-offset-2">by nouvous</span>
               </a>
@@ -119,10 +119,10 @@ const ModernPostalLookup = () => {
 
 
         <div className="text-center  mb-16 relative">
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-500 inline-block text-transparent bg-clip-text">
-            Discover Indian Postal / Zip Codes
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-500 inline-block text-transparent bg-clip-text">
+            Discover Indian Zip Codes
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-xl mb-8 max-w-3xl mx-auto">
+          <p className="text-gray-300 text-xl mb-8 max-w-2xl mx-auto">
             A modern platform for finding postal codes and area information,
             updated regularly for the community.
           </p>
