@@ -1,7 +1,6 @@
 import { useState, useCallback, memo } from "react";
 import { Search, MapPin, Building2, Pin } from "lucide-react";
 
-// Memoized CategoryButton to avoid unnecessary re-renders
 const CategoryButton = memo(({ category, isActive, onClick }) => (
   <div
     className={`p-4 rounded-xl ${isActive ? 'bg-blue-500 text-white' : 'text-white bg-gray-800'} shadow-sm hover:shadow-md transition-all cursor-pointer`}
@@ -16,9 +15,8 @@ const CategoryButton = memo(({ category, isActive, onClick }) => (
   </div>
 ));
 
-// Memoized SearchInput to avoid unnecessary re-renders
-const SearchInput = memo(({ type, value, onChange, onSearch, placeholder, isLoading, error }) => (
-  <div className={`bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg transition-all duration-300 ${type === "zip" ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+const SearchInput = memo(({ type, activeSearch, value, onChange, onSearch, placeholder, isLoading, error }) => (
+  <div className={`bg-gray-800/80 backdrop-blur-xl rounded-xl p-6 shadow-lg transition-all duration-300 ${type === activeSearch ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
     <div className="mb-4">
       <h2 className="text-xl font-semibold mb-1 text-white">{type === "zip" ? "Search by PIN Code" : "Search by Area"}</h2>
       <p className="text-gray-400 text-sm">{type === "zip" ? "Find areas by PIN code" : "Find PIN codes by area name"}</p>
@@ -91,6 +89,15 @@ const ModernPostalLookup = () => {
     { icon: <Building2 className="w-4 h-4" />, label: "Area Search", type: "area" },
   ];
 
+  // Clear results when switching search type
+  const handleCategoryChange = (type) => {
+    setActiveSearch(type);
+    setZipPostOffices([]);
+    setAreaPostOffices([]);
+    setZipError("");
+    setAreaError("");
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -110,6 +117,17 @@ const ModernPostalLookup = () => {
           </div>
         </nav>
 
+
+        <div className="text-center  mb-16 relative">
+          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-500 inline-block text-transparent bg-clip-text">
+            Discover Indian Postal / Zip Codes
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 text-xl mb-8 max-w-3xl mx-auto">
+            A modern platform for finding postal codes and area information,
+            updated regularly for the community.
+          </p>
+        </div>
+
         {/* Category Grid */}
         <div className="grid grid-cols-2 gap-4 mb-12">
           {categories.map((category, index) => (
@@ -117,7 +135,7 @@ const ModernPostalLookup = () => {
               key={index}
               category={category}
               isActive={activeSearch === category.type}
-              onClick={() => setActiveSearch(category.type)}
+              onClick={() => handleCategoryChange(category.type)}
             />
           ))}
         </div>
@@ -126,6 +144,7 @@ const ModernPostalLookup = () => {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <SearchInput
             type="zip"
+            activeSearch={activeSearch}
             value={zip}
             onChange={(e) => setZip(e.target.value)}
             onSearch={() => handleSearch("zip")}
@@ -135,6 +154,7 @@ const ModernPostalLookup = () => {
           />
           <SearchInput
             type="area"
+            activeSearch={activeSearch}
             value={area}
             onChange={(e) => setArea(e.target.value)}
             onSearch={() => handleSearch("area")}
@@ -158,7 +178,6 @@ const ModernPostalLookup = () => {
   );
 };
 
-// Memoized ResultList to prevent re-renders
 const ResultList = memo(({ title, items }) => (
   <div className="mb-8">
     <h2 className="text-xl font-semibold mb-4 dark:text-white">{title}</h2>
